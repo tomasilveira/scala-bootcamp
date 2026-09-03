@@ -20,7 +20,9 @@ object DataStructures {
   val updatedImmutableList = immutableList1.updated(1, -1)
 
   val doTheyHaveEqualContents1 = mutableList == updatedImmutableList // true
-  val doTheyHaveEqualContents2 = (mutableList zip updatedImmutableList) forall { case (a, b) => a == b }
+  val doTheyHaveEqualContents2 = (mutableList.zip(updatedImmutableList)) forall { case (a, b) => a == b }
+
+  val list: List[Int] = mutableList.toList
 
   // Arrays
   //
@@ -29,6 +31,7 @@ object DataStructures {
   array(2) // read the 3rd element, it will be 3
   array(3) = 7 // update the 4th element to be 7
 
+  private val maybeInt: Option[Int] = array.lift(10)
   // Lists
   //
   // Immutable list represents ordered collections of elements of type A.
@@ -48,12 +51,13 @@ object DataStructures {
   val tailOfList = immutableList2.tail // 2 :: 3 :: Nil
 
   val joinLists = immutableList2 ::: List(8, 9) // 1 :: 2 :: 3 :: 8 :: 9 :: Nil
+  // to concatenate two lists :::
 
   val headOfList1 = Try(emptyList1.head) // what will happen here?!
   val headOfList2 = emptyList1.headOption // None
   val headOfList3 = immutableList2.headOption // Some(1)
 
-  // Question. We have seen `Nil`, `None`, `Nothing` and `null` so far. What do they each mean?
+  // Question. We have seen `Nil` empty list, `None` empty option, `Nothing` bottom type and `null` so far. What do they each mean?
 
   // Vectors
   //
@@ -81,7 +85,7 @@ object DataStructures {
   // Exercise. Write a function that checks if all values in a `List` are equal.
   // Think about what you think your function should return if `list` is empty, and why.
   def allEqual[T](list: List[T]): Boolean = {
-    false // TODO: implement
+    list.forall(_ == list.head)
   }
 
   // Maps
@@ -123,7 +127,9 @@ object DataStructures {
   // `vegetableAmounts` and prices per unit from `vegetablePrices`. Assume the price is 10 if not available
   // in `vegetablePrices`.
   val totalVegetableCost: Int = {
-    17 // implement here
+    vegetableAmounts.map{
+      case(k,v) => v * vegetablePrices.getOrElse(k, 10)
+    }.sum
   }
 
   // Exercise. Given the vegetable weights (per 1 unit of vegetable) in `vegetableWeights` and vegetable
@@ -131,14 +137,38 @@ object DataStructures {
   //
   // For example, the total weight of "olives" is 2 * 32 == 64.
   val totalVegetableWeights: Map[String, Int] = { // implement here
-    Map()
+    vegetableAmounts
+      .map { case(k,v) => (k,v * vegetableWeights.getOrElse(k, 0))}
+      .filter{ case (_,y)=> y!=0 }
+
   }
+
+  val totalVegetableWeights2: Map[String, Int] = { // implement here
+    val value: Map[String,Int] = vegetableAmounts
+      .flatMap { case(vegetable,amount) => val maybeTuple: Option[(String, Int)] = vegetableWeights
+        .get(vegetable)
+        .map(weight => vegetable -> (weight * amount))
+
+        maybeTuple
+      }
+    value
+
+  }
+
 
   // Ranges and Sequences
   val inclusiveRange: Seq[Int] = 2 to 4 // 2, 3, 4, or <=
   val exclusiveRange: Seq[Int] = 2 until 4 // 2, 3, or <
   val withStep: Seq[Int]       = 2 to 40 by 7 // 2, 9, 16, 23, 30, 37
 
+  for (i<- 1 until 4){}
+
+  val _: Unit =
+    for{
+      i<-1 until 4
+    }yield {
+      println(i)
+    }
   // Seq, IndexedSeq and LinearSeq traits are implemented by many collections and contain various useful
   // methods. See https://docs.scala-lang.org/overviews/collections/seqs.html in case you are interested
   // to learn more about them at this point.
@@ -214,5 +244,17 @@ object DataStructures {
   //
   // Input `Map("a" -> 1, "b" -> 2, "c" -> 4, "d" -> 1, "e" -> 0, "f" -> 2, "g" -> 2)` should result in
   // output `List(Set("e") -> 0, Set("a", "d") -> 1, Set("b", "f", "g") -> 2, Set("c") -> 4)`.
-  def sortConsideringEqualValues[T](map: Map[T, Int]): List[(Set[T], Int)] = ???
+  def sortConsideringEqualValues[T](map: Map[T, Int]): List[(Set[T], Int)] = {
+    val input =
+      Map("a" -> 1,
+        "b" -> 2,
+        "c" -> 4,
+        "d" -> 1,
+        "e" -> 0,
+        "f" -> 2,
+        "g" -> 2
+      )
+
+    List(Set("a", "d") -> 1, Set("b", "f", "g") -> 2, ..)
+  }
 }

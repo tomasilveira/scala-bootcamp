@@ -1,5 +1,7 @@
 package com.evolutiongaming.bootcamp.basics
 
+import com.evolutiongaming.bootcamp.basics.ControlStructures.Amount
+
 object ClassesAndTraits {
   // You can follow your progress using the tests in `ClassesAndTraitsSpec`:
   //   sbt "testOnly com.evolutiongaming.bootcamp.basics.ClassesAndTraitsSpec"
@@ -36,6 +38,7 @@ object ClassesAndTraits {
   mutableUser.login // "potter"
   mutableUser.balance // 0.0
 
+
   // Question. Is MutableUser a good design? Why or why not?
 
   // Traits define a common interface that classes conform to. They are similar to Java's interfaces.
@@ -60,19 +63,23 @@ object ClassesAndTraits {
   //
   def totalBalance(accounts: List[HasBalance]): HasBalance =
     new HasBalance {
-      def balance: Double = ???
+      def balance: Double = accounts.map(_.balance).sum
     }
 
   trait Account extends HasBalance {
-    // def addMoney(amount: Double)
-    // def takeMoney(amount: Double)
+    def addMoney(amount: Double): HasBalance
+    def takeMoney(amount: Double): HasBalance
   }
 
   sealed trait User {
     def login: String
   }
 
-  final case class RegularUser(login: String, balance: Double) extends User with Account
+  final case class RegularUser(login: String, balance: Double) extends User with Account {
+    def addMoney(amount:Double): RegularUser = copy(balance = balance + amount)
+    def takeMoney(amount: Double): RegularUser  = copy(balance = balance - amount)
+
+  }
 
   case object Admin extends User {
     val login: String = "admin"
@@ -122,8 +129,16 @@ object ClassesAndTraits {
 
   // Question. Do you agree with how the stack is modelled here? What would you do differently?
   final case class Stack[A](elements: List[A] = Nil) {
-    def push(x: A): Stack[A] = ???
-    def peek: A              = ???
-    def pop: (A, Stack[A])   = ???
+    def push(x: A): Stack[A] = Stack(x :: elements)
+    def peek: A              = elements.head
+    def pop: (A, Stack[A])   = (peek, Stack(elements.tail))
   }
+
+  /**val list:List[Int] = List(1,2,3)
+  val stack: Stack[Int] =Stack(list)
+
+  stack.push(4) // -> ListElement(4) -> list
+  stack.peek // -> List.head -> 4
+  stack.pop // -> List.head -> 4, List -> List(1,2,3)
+  **/
 }

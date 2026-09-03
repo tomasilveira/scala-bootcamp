@@ -1,6 +1,7 @@
 package com.evolutiongaming.bootcamp.functions
 
 import java.time.Instant
+import scala.util.Try
 
 object Functions {
 
@@ -34,13 +35,14 @@ object Functions {
   def processText2(message: String, f: String => String): String = f(message)
 
   // Exercise. Implement `isEven` method that checks if a number is even.
-  def isEven(n: Int): Boolean = ???
+  def isEven(n: Int): Boolean = n % 2 == 0
 
   // Exercise. Implement `isEvenFunc` function that behaves exactly like `isEven` method.
-  val isEvenFunc: Int => Boolean = n => ???
+  val isEvenFunc: Int => Boolean = _ % 2 == 0
 
   // Exercise. Implement `isEvenMethodToFunc` function by transforming `isEven` method into a function.
-  val isEvenMethodToFunc: Int => Boolean = n => ???
+  val isEvenMethodToFunc: Int => Boolean = n => isEven(n)
+  val isEvenMethodToFunc1: Int => Boolean = isEven
 
   // There are traits in Scala to represent functions with various numbers of arguments: `Function0`,
   // `Function1`, `Function2`, etc. So `(A => B)` is the same as `Function1[A, B]`. A trait, where
@@ -72,17 +74,23 @@ object Functions {
   trait MyMap[K, V] extends (K => V)
 
   // Question. What function should we extend to check if an element belongs to a set?
-  trait MySet[A] // extends ???
+  trait MySet[A] extends (A => Boolean)// extends ???
 
   // Question. What function should we extend to return a value by its index?
-  trait MySeq[A] // extends ???
+  trait MySeq[A] extends (Int => A)// extends ???
 
   // POLYMORPHIC FUNCTIONS
 
   // Polymorphic functions have at least one type parameter.
 
   // Exercise. Implement `mapOption` function without calling `Option` APIs.
-  def mapOption[A, B](option: Option[A], f: A => B): Option[B] = ???
+  def mapOption[A, B](option: Option[A], f: A => B): Option[B] = option.map(f)
+  def mapOption[A, B](option: Option[A], f: A => B): Option[B] = {
+    option match{
+      case None => None
+      case Some(value) => Some(f(value))
+    }
+  }
 
   // FUNCTION COMPOSITION
 
@@ -183,20 +191,22 @@ object Functions {
   // Exercises. Convert the following functions into pure functions. Replace ??? with correct return types.
 
   def parseDate(s: String): Instant = Instant.parse(s)
-  def parseDatePure(s: String): ??? = ???
+  def parseDatePure1(s: String): Option[Instant] = Try(parseDate(s)).toOption
+  def parseDatePure2(s: String): Either[Throwable, Instant] = Try(parseDate(s)).toEither
 
   def divide(a: Int, b: Int): Int     = a / b
-  def dividePure(a: Int, b: Int): ??? = ???
+  def dividePure(a: Int, b: Int): Option[Int] = Try(a/b).toOption
 
   def isAfterNow(date: Instant): Boolean   = date.isAfter(Instant.now())
-  def isAfterNowPure( /* ??? */ ): Boolean = ???
+  def isAfterNowPure( date: Instant, now: Instant ): Boolean = date.isAfter(now)
 
   case class NonEmptyList[T](head: T, rest: List[T])
   def makeNonEmptyList[T](list: List[T]): NonEmptyList[T] = {
     if (list.isEmpty) println("Error: list must not be empty")
     NonEmptyList(list.head, list.tail)
   }
-  def makeNonEmptyListPure[T](list: List[T]): ???         = ???
+  def makeNonEmptyListPure[T](list: List[T]): ???         =
+
 
   // Attributions and useful links:
   // https://jim-mcbeath.blogspot.com/2009/05/scala-functions-vs-methods.html

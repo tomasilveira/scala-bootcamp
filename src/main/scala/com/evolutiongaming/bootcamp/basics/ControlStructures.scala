@@ -1,7 +1,8 @@
 package com.evolutiongaming.bootcamp.basics
 
 import java.io.FileNotFoundException
-
+import java.time.format.TextStyle
+import java.util.Locale
 import scala.annotation.tailrec
 import scala.io.Source
 import scala.util.{Failure, Success, Try}
@@ -9,7 +10,25 @@ import scala.util.{Failure, Success, Try}
 object ControlStructures {
   // You can follow your progress using the tests in `ControlStructuresSpec`.
   //   sbt "testOnly com.evolutiongaming.bootcamp.basics.ControlStructuresSpec"
+  val cool: Int=1
+  if(cool ==1)
+    "Greet!"
+  else if (cool== 2)
+    "Hello!"
+  else
+    "Hi!"
 
+  trait Animal
+  case class Dog() extends Animal
+  case class Cat() extends Animal
+
+  val result: Animal =
+    if (cool== 1)
+      Dog()
+    else if(cool==2)
+      Cat()
+    else
+      Cat()
   // The if-else construct is as follows:
   //
   // val result =
@@ -32,7 +51,7 @@ object ControlStructures {
   // Exercise. Implement a "Fizz-Buzz" https://en.wikipedia.org/wiki/Fizz_buzz function using the if-else,
   // returning "fizzbuzz" for numbers which divide with 15, "fizz" for those which divide by 3 and "buzz" for
   // those which divide with 5, and returning the input number as a string for other numbers:
-  def fizzBuzz1(n: Int): String = ???
+  def fizzBuzz1(n: Int): String = if(n%15==0) "fizzbuzz" else if(n%3== 0)"fizz" else if(n%5==0)"buzz" else n.toString
 
   // Pattern Matching
   //
@@ -45,23 +64,22 @@ object ControlStructures {
   //    case _                              => fallbackResult
   // }
 
+  val string: String = "dog"
+
+  val result1:String = string match{
+    case "cat" => "prrr..."
+    case x if x.startsWith("dog") => "hong"
+    case _ => "underfunded"
+  }
+
+  import java.time.Month
+
   type ErrorMessage = String
-  def monthName(x: Int): Either[ErrorMessage, String] =
+  def monthName(x: Int, locale: Locale): Either[ErrorMessage, String] =
     x match {
-      case 1           => Right("January")
-      case 2           => Right("February")
-      case 3           => Right("March")
-      case 4           => Right("April")
-      case 5           => Right("May")
-      case 6           => Right("June")
-      case 7           => Right("July")
-      case 8           => Right("August")
-      case 9           => Right("September")
-      case 10          => Right("October")
-      case 11          => Right("November")
-      case 12          => Right("December")
       case x if x <= 0 => Left(s"Month $x is too small")
-      case x           => Left(s"Month $x is too large")
+      case x if x > 12 => Left(s"Month $x is too large")
+      case x => Right(Month.of(x).getDisplayName(TextStyle.FULL,locale))
     }
 
   // Question. How would you improve `monthName`?
@@ -88,7 +106,7 @@ object ControlStructures {
   def matchOnShape2(s: Shape): String = s match {
     case Origin         => s"Found the origin."
     case circle: Circle => s"Found a circle $circle."
-    // case rectangle: Rectangle => s"Found a rectangle $rectangle."
+    case rectangle: Rectangle => s"Found a rectangle $rectangle."
   }
 
   // Unapply the instance of Shape
@@ -98,6 +116,7 @@ object ControlStructures {
     case Rectangle(width, height) => s"Found a rectangle with width $width and height $height."
   }
 
+
   def matchOnShape4(s: Shape): String = s match {
     case Origin                               => s"Found the origin."
     case circle @ Circle(radius)              => s"Found a circle $circle with radius $radius."
@@ -105,16 +124,29 @@ object ControlStructures {
   }
 
   // Exercise. Implement a "Fizz-Buzz" function using pattern matching:
-  def fizzBuzz2(n: Int): String = ???
+  def fizzBuzz2(n: Int): String = (n%3, n%5) match{
+    case(0,0) => "fizzbuzz"
+    case(0,_) => "fizz"
+    case(_,0) => "buzz"
+    case _ => n.toString
+  }
 
   // Recursion
   //
   // A function which calls itself is called a recursive function. This is a commonly used way how to
   // express looping constructs in Functional Programming languages.
 
-  def sum1(list: List[Int]): Int =
-    if (list.isEmpty) 0
-    else list.head + sum1(list.tail)
+  def sum1(list: List[Int]): Int = list match{
+    case Nil => 0
+    case head  :: tail => head + sum1(tail)
+  }
+
+  def sumTail(list:List[Int], acc:Int =0): Int = list match {
+    case Nil => acc
+    case head :: tail => sumTail(tail, acc + head)
+  }
+
+  //risk of stack.overflow
 
   // Question. What are the risks of List#head and List#tail? How can you refactor `sum1` to avoid these invocations?
 
@@ -149,14 +181,22 @@ object ControlStructures {
   //
   // Thus `applyNTimesForInts(_ + 1, 4)(3)` should return `((((3 + 1) + 1) + 1) + 1)` or `7`.
   def applyNTimesForInts(f: Int => Int, n: Int): Int => Int = { x: Int =>
-    f(x + n) // replace with a correct implementation
+    @tailrec
+    def loop(m:Int, acc:Int): Int= m match{
+      case 0 => acc
+      case _ => loop(m - 1, f(acc))
+    }
+    loop(n, x)
+  }
+
+  def main(args: Array[UserId]): Unit = {
+    println(applyNTimesForInts(_ + 1, 4)(3))
+    println(applyNTimes((x: Int) => x + 1, 4)(3))
   }
 
   // Exercise: Convert the function `applyNTimesForInts` into a polymorphic function `applyNTimes`:
   def applyNTimes[A](f: A => A, n: Int): A => A = { x: A =>
-    // replace with correct implementation
-    println(n)
-    f(x)
+    List.range(0, n).foldLeft(x)((acc, _) => f(acc))
   }
 
   // `map`, `flatMap` and `filter` are not control structures, but methods that various collections (and
@@ -207,7 +247,7 @@ object ControlStructures {
   }
 
   // Question. What is the value of this code?
-  val listFilterExample = List(1, 2, 3).filter(_ % 2 == 0)
+  val listFilterExample = List(1, 2, 3).filter(_ % 2 == 0) //only 2 corresponds to the condition
 
   // For Comprehensions
 
@@ -231,6 +271,8 @@ object ControlStructures {
     y <- b
   } yield x * y
 
+  //List(10, 100, 20, 200, 30, 300)
+
   val d = a.flatMap(x => b.map(y => x * y))
 
   // Question: What is the value of `c` above?
@@ -243,6 +285,8 @@ object ControlStructures {
     if z == 1 // filter expression
     y <- b // generator
   } yield x + y
+
+  //List(11, 101,13, 103)
 
   // Question. What is the value of `e` above?
 
@@ -275,7 +319,18 @@ object ControlStructures {
     // amount, respectively):
     println(s"$service, $fromUserWithName, $toUserWithName, $amount")
     import service._
-    ???
+    for{
+      _               <- validateUserName(fromUserWithName)
+      _               <- validateUserName(toUserWithName)
+      fromUserId      <- findUserId(fromUserWithName)
+      toUserId        <- findUserId(toUserWithName)
+      _               <- validateAmount(amount)
+      fromUserBalance <- findBalance(fromUserId)
+      toUserBalance   <- findBalance(toUserId)
+
+      newFromUserBalance <- updateAccount(fromUserId, fromUserBalance, -amount)
+      newToUserBalance <- updateAccount(toUserId,toUserBalance, amount)
+    }yield (newFromUserBalance, newToUserBalance)
   }
 
   // Question. What are the questions would you ask - especially about requirements - before implementing
@@ -294,8 +349,12 @@ object ControlStructures {
   // List all the elements in `A * B`.
   //
   // Use a "for comprehension" in your solution.
-
-  val AProductB: Set[(Int, Boolean)] = Set()
+  val A = Set(0, 1, 2)
+  val B = Set(true, false)
+  val AProductB: Set[(Int, Boolean)] = for{
+    a<- A
+    b<- B
+  }yield (a,b)
 
   // Exercise:
   //
@@ -307,7 +366,7 @@ object ControlStructures {
   //
   // Use "map" and `++` (`Set` union operation) in your solution.
 
-  val ASumB: Set[Either[Int, Boolean]] = Set()
+  val ASumB: Set[Either[Int, Boolean]] = A.map(Left(_)) ++ B.map(Right(_)) // or Left.apply and Right.apply
 
   // Scala inherits the standard try-catch-finally construct from Java:
   def printFile(fileName: String): Unit = {
@@ -330,8 +389,10 @@ object ControlStructures {
   // It can be thought of as a "`goto` to an unknown place up the call stack".
 
   // One of these other mechanisms is `Try[A]` which can be thought of as an `Either[Throwable, A]`:
-
+  import cats.syntax.either._
   def parseInt1(x: String): Try[Int] = Try(x.toInt)
+  def parseInt2(x: String): Option[Int] = x.toIntOption
+  def parseInt3(x: String): Either[String, Int] = Try(x.toInt).toEither.leftMap(e=> s"Failed to parse $x: ${e.getMessage}")
 
   parseInt1("asdf") match {
     case Success(value) => println(value)
