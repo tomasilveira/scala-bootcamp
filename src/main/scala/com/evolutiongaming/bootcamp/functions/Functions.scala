@@ -85,7 +85,7 @@ object Functions {
 
   // Exercise. Implement `mapOption` function without calling `Option` APIs.
   def mapOption[A, B](option: Option[A], f: A => B): Option[B] = option.map(f)
-  def mapOption[A, B](option: Option[A], f: A => B): Option[B] = {
+  def mapOption1[A, B](option: Option[A], f: A => B): Option[B] = {
     option match{
       case None => None
       case Some(value) => Some(f(value))
@@ -205,7 +205,18 @@ object Functions {
     if (list.isEmpty) println("Error: list must not be empty")
     NonEmptyList(list.head, list.tail)
   }
-  def makeNonEmptyListPure[T](list: List[T]): ???         =
+  def makeNonEmptyListPure[T](list: List[T]): Either [String, NonEmptyList[T]] = {
+
+    if (list.isEmpty) {
+      Left("Error: list must not be empty")
+    } else {
+      Right(NonEmptyList(list.head, list.tail))
+    }
+
+
+
+  }
+
 
 
   // Attributions and useful links:

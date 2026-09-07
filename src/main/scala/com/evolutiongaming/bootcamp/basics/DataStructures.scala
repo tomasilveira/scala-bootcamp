@@ -163,12 +163,12 @@ object DataStructures {
 
   for (i<- 1 until 4){}
 
-  val _: Unit =
-    for{
-      i<-1 until 4
-    }yield {
-      println(i)
-    }
+//  val _: Unit =
+//    for{
+//      i<-1 until 4
+//    }yield {
+//      println(i)
+//    }
   // Seq, IndexedSeq and LinearSeq traits are implemented by many collections and contain various useful
   // methods. See https://docs.scala-lang.org/overviews/collections/seqs.html in case you are interested
   // to learn more about them at this point.
@@ -223,9 +223,12 @@ object DataStructures {
   //     that don't include `elem`, and add `elem` to them.
   def allSubsetsOfSizeN[A](set: Set[A], n: Int): Set[Set[A]] = {
     // replace with correct implementation
-    println(n)
-    Set(set)
+      set.subsets(n).toSet
+    // se eu quiser fazer funcionalmente como faço?------------------------------------
+    // como escolho mais do que um elemento de um set de uma vez
   }
+
+  // `allSubsetsOfSizeN(Set(1, 2, 3), 1) == Set(Set(1), Set(2), Set(3))`
 
   // Homework
   //
@@ -245,16 +248,20 @@ object DataStructures {
   // Input `Map("a" -> 1, "b" -> 2, "c" -> 4, "d" -> 1, "e" -> 0, "f" -> 2, "g" -> 2)` should result in
   // output `List(Set("e") -> 0, Set("a", "d") -> 1, Set("b", "f", "g") -> 2, Set("c") -> 4)`.
   def sortConsideringEqualValues[T](map: Map[T, Int]): List[(Set[T], Int)] = {
-    val input =
-      Map("a" -> 1,
-        "b" -> 2,
-        "c" -> 4,
-        "d" -> 1,
-        "e" -> 0,
-        "f" -> 2,
-        "g" -> 2
-      )
+//    val input =
+//      Map("a" -> 1,
+//        "b" -> 2,
+//        "c" -> 4,
+//        "d" -> 1,
+//        "e" -> 0,
+//        "f" -> 2,
+//        "g" -> 2
+//      )
+//
+//   List(Set("a", "d") -> 1, Set("b", "f", "g") -> 2)
 
-    List(Set("a", "d") -> 1, Set("b", "f", "g") -> 2, ..)
+
+    map.groupBy(_._2).map{case(v, m) => m.keySet -> v }.toList.sortBy(_._2)
+
   }
 }
