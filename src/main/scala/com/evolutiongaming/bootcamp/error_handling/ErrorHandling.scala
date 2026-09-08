@@ -1,7 +1,6 @@
 package com.evolutiongaming.bootcamp.error_handling
 
-import cats.data.{NonEmptyList, Validated}
-import cats.syntax._
+import cats.data.Validated
 import com.evolutiongaming.bootcamp.error_handling.ErrorHandling.TransferError.{AmountIsTooLarge, NegativeAmount, TooManyDecimals, ZeroAmount}
 
 import scala.concurrent.Future
@@ -107,11 +106,11 @@ object ErrorHandling extends App {
   }
 
 
-  def credit1(amount: BigDecimal): Either[NonEmptyList[TransferError], Unit] = {
-    NonEmptyList.one(1).tail
-
-    ???
-  }
+//  def credit1(amount: BigDecimal): Either[NonEmptyList[TransferError], Unit] = {
+//    NonEmptyList.one(1).tail
+//
+//    ???
+//  }
 
 
   // `Either[Throwable, A]` is similar to `Try[A]`. However, because `Try[A]` has its error channel hardcoded
