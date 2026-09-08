@@ -87,7 +87,7 @@ object ClassesAndTraits {
 
   // Case Classes
   //
-  // Case classes are like regular classes, but with extra features which make them good for modelling
+  // Case classes are like regular classes, but with extra features which make them good for modeling
   // immutable data. They have all the functionality of regular classes, but the compiler generates additional
   // code, such as:
   // - Case class constructor parameters are public `val` fields, publicly accessible

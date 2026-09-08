@@ -358,7 +358,7 @@ object Basics {
 
   // Polymorphic methods, or methods which take type parameters
   //
-  // Methods in Scala can be parameterised by types of their arguments and return values. Type parameters are
+  // Methods in Scala can be parameterized by types of their arguments and return values. Type parameters are
   // enclosed in square brackets (in contrast with value parameters which are enclosed in parentheses).
 
   // Thus instead of having to implement similar or identical methods for each type, you can
@@ -424,7 +424,7 @@ object Basics {
   val errorOccurred: Either[String, Int]   = Left("Failed to parse")
   val normalExecution: Either[String, Int] = Right(4)
 
-  // More exercises to help internalise the "types define the set of possible values that a value can have":
+  // More exercises to help internalize the "types define the set of possible values that a value can have":
 
   // Exercise. List all values of the type `Option[Boolean]`:
   val allOptionBooleans: Set[Option[Boolean]] = Set(None, Some(true), Some(false))
