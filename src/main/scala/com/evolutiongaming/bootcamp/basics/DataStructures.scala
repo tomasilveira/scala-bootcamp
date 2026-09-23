@@ -223,8 +223,15 @@ object DataStructures {
   //     that don't include `elem`, and add `elem` to them.
   def allSubsetsOfSizeN[A](set: Set[A], n: Int): Set[Set[A]] = {
     // replace with correct implementation
-      set.subsets(n).toSet
+//      set.subsets(n).toSet
     // se eu quiser fazer funcionalmente como faço?------------------------------------
+    if (n <= 0 || n > set.size) Set.empty
+    else if (n == 1) set.map(elem => Set(elem))
+    else {
+      set.flatMap { elem =>
+        allSubsetsOfSizeN(set - elem, n - 1).map(_ + elem)
+      }
+    }
     // como escolho mais do que um elemento de um set de uma vez
   }
 

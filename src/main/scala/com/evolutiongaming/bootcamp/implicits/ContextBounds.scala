@@ -7,19 +7,19 @@ object ContextBounds {
   object Exercise1 {
 
     // Let's revisit some functions we implemented while studying implicit classes:
-    def concat(a: Int, b: Int): Int = ???
+    def concat(a: Int, b: Int): Int = s"$a$b".toInt
 
     // Exercise 1: Implement repeat functions for various types.
     // For `Int` using `concat` function above. For others, use built-in methods.
 
     // `repeat(72, 3)` should return `727272`
-    def repeat(a: Int, times: Int): Int = ???
+    def repeat(a: Int, times: Int): Int = (1 until times).foldLeft(a){case(acc,_)=>concat(acc, a)}
 
     // `repeat("Scala", 3)` should return `"ScalaScalaScala"`
-    def repeat(a: String, times: Int): String = ???
+    def repeat(a: String, times: Int): String = (1 until times).foldLeft(a){case(acc,_)=> acc ++ a}
 
     // `repeat(List(10, 20, 30), 3)` should return `List(10, 20, 30, 10, 20, 30, 10, 20, 30)`
-    def repeat(a: List[Int], times: Int): List[Int] = ???
+    def repeat(a: List[Int], times: Int): List[Int] = (1 until times).foldLeft(a){case(acc,_)=> acc ++ a}
 
   }
 
@@ -34,7 +34,7 @@ object ContextBounds {
     def repeat[T](a: T, times: Int): T = ???
   }
 
-  // (spoiler was deleted here, will be told by lecturer)
+  // (spoiler was deleted here, will be told by lecturer) it is not possible
 
   // What if we had a univeral way to concatenate all of these types? Let's make
   // such a univeral way...
@@ -48,18 +48,32 @@ object ContextBounds {
   }
   object Concatenable {
     val forInt: Concatenable[Int]           = new Concatenable[Int] {
-      def concat(a: Int, b: Int): Int = ???
+      def concat(a: Int, b: Int): Int = s"$a$b".toInt
     }
     val forString: Concatenable[String]     = new Concatenable[String] {
-      def concat(a: String, b: String): String = ???
+      def concat(a: String, b: String): String = a ++ b
     }
     val forListInt: Concatenable[List[Int]] = new Concatenable[List[Int]] {
-      def concat(a: List[Int], b: List[Int]): List[Int] = ???
+      def concat(a: List[Int], b: List[Int]): List[Int] = a ++ b
     }
   }
 
+  trait Loggable[T] {
+    def log(t: T): Unit
+  }
+
   object Exercise3 {
-    def repeat[T](a: T, times: Int, concatenable: Concatenable[T]): T = ???
+    def repeat[T](a: T, times: Int) (implicit concatenable: Concatenable[T], loggable: Loggable[T]): T = {
+      loggable.log(a)
+      (1 until times).foldLeft(a){case(acc,_)=>concatenable.concat(acc, a)}
+    }
+
+    def repeat1[T:Concatenable: Loggable](a: T, times: Int): T = {
+      implicitly[Loggable[T]].log(a)
+      val concatenable = implicitly[Concatenable[T]]
+      (1 until times).foldLeft(a) { case (acc, _) => concatenable.concat(acc, a)}
+      //repeat[T](a, times)
+    }
   }
 
   // Do you find this way convenient / readable? What else we could do to

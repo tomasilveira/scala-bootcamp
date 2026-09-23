@@ -1,5 +1,7 @@
 package com.evolutiongaming.bootcamp.typeclass.v3_typeclass
 
+import com.evolutiongaming.bootcamp.typeclass.v3_typeclass.FPJson.Jsonable
+
 final case class Json(s: String) { // simplified representation of JSON
   override def toString: String = s
 }
@@ -40,13 +42,23 @@ object FPJson extends App {
   object InstancesTask {
 
     final case class Player(id: Int, name: String)
-
     implicit val playerJsonable: Jsonable[Player] = ???
+    //    implicit val playerJsonable: Jsonable[Player] = {
+//      def toJson(player: Player): Json = Json(s"""{"id": ${player.id}, "name": ${player.name}}""")
+//    }
 
-    implicit val intJsonable: Jsonable[Int] = ???
+    implicit val intJsonable: Jsonable[Int] = a=> Json(a.toString)
 
-    implicit val optionIntJsonable: Jsonable[Option[Int]] = ???
-  }
+    implicit val optionIntJsonable: Jsonable[Option[Int]] = {
+      case Some(value) => Json(value.toString)
+      case None => Json("null")
+    }
+//    implicit val optionIntJsonable: Jsonable[Option[Int]] = new Jsonable[Option[Int]] {
+//      override def toJson(entity: Option[Int]): Json = entity match {
+//        case Some (value) => Json (value.toString)
+//        case None => Json ("null")
+//      }
+//    }
 
   object GenericImplicitsTask {
 
@@ -59,7 +71,12 @@ object FPJson extends App {
           }
       }
 
-    implicit def listJsonable[A](implicit jsonableA: Jsonable[A]): Jsonable[List[A]] = ???
+    implicit def listJsonable[A](implicit jsonableA: Jsonable[A]): Jsonable[List[A]] = new Jsonable[List[A]] {
+      override def toJson(entity: List[A]): Json = {
+        Json(entity.map(jsonableA.toJson(_).s).mkString("[", ",", "]"))
+      }
+    }
+    }
   }
 
   object SingleAbstractMethod {
@@ -68,14 +85,14 @@ object FPJson extends App {
       def toJson(game: Game): Json = Json(s"""{"id": ${game.id}}""")
     }
 
-    implicit val after: Jsonable[Game] = ???
+    implicit val after: Jsonable[Game] = game => Json(s"""{"id": ${game.id}}""")
   }
 
   object ContextBound {
 
     def prettyPrintBefore[A](a: A)(implicit jsonable: Jsonable[A]): Unit = println(jsonable.toJson(a))
 
-    def prettyPrintAfter[A: Jsonable](a: A): Unit = ???
+    def prettyPrintAfter[A: Jsonable](a: A): Unit = println(implicitly[Jsonable[A]].toJson(a))
   }
 
   object Summoner {
@@ -89,7 +106,7 @@ object FPJson extends App {
       println(jsonable.toJson(a))
     }
 
-    def prettyPrintWithSummoner[A: Jsonable](a: A): Unit = ???
+    def prettyPrintWithSummoner[A: Jsonable](a: A): Unit = println(Jsonable[A].toJson(a))
   }
 
   object Syntax {
@@ -106,7 +123,9 @@ object FPJson extends App {
       }
     }
 
-    def prettyPrintWithSyntax[A: Jsonable](a: A): Unit = ???
+    import JsonableSyntax._
+
+    def prettyPrintWithSyntax[A: Jsonable](a: A): Unit = println(a.toJson)
   }
 }
 
@@ -142,22 +161,22 @@ object FPJsonSugared extends App {
   prettyPrint(Game(123))
 }
 
-//object FPJsonMacros extends App {
-//  import simulacrum._
-//
-//  @typeclass trait Jsonable[T] {
-//    def toJson(entity: T): Json
-//  }
-//
-//  import Jsonable.ops._
-//  def prettyPrint[A: Jsonable](a: A): Unit = println(a.toJson)
-//
-//  final case class Game(id: Int)
-//
-//  implicit val gameJsonable: Jsonable[Game] = (game: Game) => Json(s"""{"id": ${game.id}}""")
-//
-//  prettyPrint(Game(123))
-//}
+object FPJsonMacros extends App {
+  import simulacrum._
+
+  @typeclass trait Jsonable[T] {
+    def toJson(entity: T): Json
+  }
+
+  import Jsonable.ops._
+  def prettyPrint[A: Jsonable](a: A): Unit = println(a.toJson)
+
+  final case class Game(id: Int)
+
+  implicit val gameJsonable: Jsonable[Game] = (game: Game) => Json(s"""{"id": ${game.id}}""")
+
+  prettyPrint(Game(123))
+}
 
 object HashCodeTask {
 

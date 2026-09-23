@@ -1,16 +1,34 @@
 package com.evolutiongaming.bootcamp.typeclass.v3_typeclass
 
+import com.evolutiongaming.bootcamp.functions.Functions.NonEmptyList
+
+
 object TypeClassesExamples extends App {
 
   // 1. Semigroup
   // 1.1. Implement all parts of the typeclass definition
   trait Semigroup[A] {
     def combine(x: A, y: A): A
-  }
+  }// 1 +2 = 3
+  //"asd" + "df" = "asddf"
 
   // 1.2. Implement Semigroup for Long, String
+  implicit val semLong: Semigroup[Long] = new Semigroup[Long] {
+    override def combine(x: Long, y: Long): Long = x + y
+  }
+
+  implicit val strSemigroup: Semigroup[String] = _ + _
+//  implicit val strSemigroup1: Semigroup[String] = new Semigroup[String] {
+//    override def combine(x: String, y: String): String = x + y
+//  }
 
   // 1.3. Implement combineAll(list: List[A]) for non-empty lists
+  def combineAll[A: Semigroup](list: NonEmptyList[A]): A =
+    list.rest.foldLeft(list.head) { (left, right) =>
+      implicitly[Semigroup[A]].combine(left, right)
+    }
+
+  combineAll(NonEmptyList(1L, List(2L, 3L))) == 6
 
   // combineAll(List(1, 2, 3)) == 6
 
@@ -21,6 +39,9 @@ object TypeClassesExamples extends App {
 
   // 2. Monoid
   // 2.1. Implement Monoid which provides `empty` value (like startingElement in previous example) and extends Semigroup
+  trait Monoid[A] extends Semigroup[A] {
+    def empty: A
+  }
 
   // 2.2. Implement Monoid for Long, String
 

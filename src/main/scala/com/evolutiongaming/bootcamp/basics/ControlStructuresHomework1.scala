@@ -9,14 +9,24 @@ object ControlStructuresHomework1 {
   // return error message "$age is too high, are you human?" if age is higher than 150
   // return error message "$age is negative, we do not serve unborn people" if age is lower than 0
   // use if-else
-  def isAdultIf(age: Int): Either[Error, Boolean] = ???
+  def isAdultIf(age: Int): Either[Error, Boolean] = {
+    if(age > 150) Left("$age is too high, are you human?")
+    else if(age < 0) Left("$age is negative, we do not serve unborn people")
+    else if(0 <= age && age < 18) Right(false)
+    else Right(true)
+  }
 
   // same as isAdultIf, but use match statement instead
-  def isAdultMatch(age: Int): Either[Error, Boolean] = ???
+  def isAdultMatch(age: Int): Either[Error, Boolean] = age match{
+    case a if a  > 150 => Left("$age is too high, are you human?")
+    case a if a  < 0 => Left("$age is negative, we do not serve unborn people")
+    case a if 0 <= a && a < 18 => Right(false)
+    case _ => Right(true)
+  }
 
   // https://en.wikipedia.org/wiki/Triangle_inequality, consider degenerate triangles invalid
   // can you do it without using any control structures?
-  def isValidTriangle(a: Double, b: Double, c: Double): Boolean = ???
+  def isValidTriangle(a: Double, b: Double, c: Double): Boolean = a > b + c || b > a + c || c > a + b
 
   // IT company located in Wakanda is searching for a new programmer. Due to high interest it needs
   // a way to filter out candidates that are not suitable for this job.
@@ -41,5 +51,20 @@ object ControlStructuresHomework1 {
     yearsOfExperience: Int,
     hasEducation: Boolean,
     starsOnGithub: Int,
-  ): Boolean = ???
+  ): Boolean = {
+    if(passedTests < 5) false
+    else{
+      val pointsYearsOfExp: Int = math.min(yearsOfExperience, 5)
+      val pointsHasEducation: Int = if(hasEducation) 3 else 0
+      val pointsPassedTests: Int = math.max(0, passedTests - 5)
+      val pointsCountry: Int = country match{
+        case "Wakanda" => 3
+        case "Narnia" | "Skyrim" | "Amestris" => 1
+        case _ => 0
+      }
+      val pointsOnGitStars: Int = if(starsOnGithub< 10) 0 else Math.log10(starsOnGithub).toInt
+      pointsYearsOfExp + pointsHasEducation + pointsPassedTests + pointsCountry + pointsOnGitStars >= 10
+
+    }
+  }
 }

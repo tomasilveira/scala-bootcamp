@@ -15,8 +15,27 @@ object HigherKindedTypes {
   So function of 2 arguments can be converted into a function with just one first argument which returns other
   function which takes second argument and returns result.
 
+
   Example:
    */
+
+  def secondElementOfIntList [A](xs: List[Int]): Option[Int] = // Hello!
+  {
+    case _ :: x :: _ => Some(x)
+    case _ => None
+  }
+  secondElementOfIntList(List(1,4,3)) // :Option[Int] = Some(value = 4)
+  secondElementOfIntList(List(1)) // :Option [Int] = None
+
+  case class Triple[A](first: A, second: A, third: A){
+    def toList: List[A] = List(first, second, third)
+  }
+
+  val t = Triple("a", "b", "c") // :Triple[String] = Triple(first = "a". second = "b", third = 1)
+  t.toList // : List[String] = List("a", "b", 1)
+
+  val t1 = Triple("a", "b", 1) // :Triple[String] = Triple(first = "a". second = "b", third = "c")
+  t.toList // : List[String] = List("a", "b", "c")
 
   def multiArgFunction(a: String, b: Int): Long          = ??? // Type: `(String, Int) => Long`
   def curriedFunction(a: String)(b: Int): Long           = ??? // Type: `String => (Int => Long)`
