@@ -15,18 +15,18 @@ object p1_Semigroup {
     */
   val stringSemigroup: Semigroup[String] = new Semigroup[String] {
     override def combine(x: String, y: String): String =
-      ??? /* your code here */
+      x + y
   }
 
   /** Ex 1.1 implement a semigroup with `sum` as an operation.
     * Q: Can you pick another operation that forms a semigroup for ints?
     */
-  val intSemigroup: Semigroup[Int] = (a, b) => ??? /* your code here */
+  val intSemigroup: Semigroup[Int] = _ + _
 
   /** Ex 1.2 implement a semigroup  for list of A via concatenation
     */
   def listSemigroup[A]: Semigroup[List[A]] =
-    Semigroup.instance((a, b) => ??? /* your code here */ )
+    Semigroup.instance(_ ++ _)
 
   // Cats has instances for a variety of types.
   import cats.instances.int._
@@ -52,11 +52,11 @@ object p1_Semigroup {
 
   /** Ex 1.3 implement a semigroup  for Nel of Int via concatenation
     */
-  def semigroupNel: Semigroup[NonEmptyList[Int]] = ???
+  def semigroupNel: Semigroup[NonEmptyList[Int]] = _ ++ _.toList
 
   /** Ex 1.3 implement a semigroup  for Map via concatenation
     */
-  def semigroupMap: Semigroup[Map[Int, Int]] = ???
+  def semigroupMap: Semigroup[Map[Int, Int]] = _ ++ _
 
   /** That's nice, but why can't we just use ordinary `+` defined for numerical types, for example?
     * For sure we can.

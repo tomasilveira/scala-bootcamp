@@ -4,6 +4,7 @@ import java.time.LocalDate
 
 object Models {
 
+
   sealed trait Artist {
     def genre: Genre
     def gigs: Seq[Gig]

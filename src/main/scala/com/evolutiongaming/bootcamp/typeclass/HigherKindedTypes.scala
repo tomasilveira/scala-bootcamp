@@ -19,7 +19,7 @@ object HigherKindedTypes {
   Example:
    */
 
-  def secondElementOfIntList [A](xs: List[Int]): Option[Int] = // Hello!
+  def secondElementOfIntList [A](xs: List[Int]): Option[Int] = xs match
   {
     case _ :: x :: _ => Some(x)
     case _ => None

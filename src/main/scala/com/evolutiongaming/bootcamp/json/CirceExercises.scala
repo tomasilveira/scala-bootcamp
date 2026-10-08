@@ -17,6 +17,14 @@ object CirceExercises {
 
   object basics {
     /*
+    {
+      "key": "value",
+      "key2": {
+        "key3": "value"
+      }
+    }
+     */
+    /*
     JSON keys are strings;
     JSON values are one of the following types:
     - Object
@@ -47,7 +55,13 @@ object CirceExercises {
       "isRatedR" true
     }
      */
-    lazy val jMatrix: Json = ???
+//    implicit val stringEncoder: Encoder[String] = ???
+    lazy val jMatrix: Json = Json.obj(
+      "title" -> "The Matrix".asJson,
+      "year" -> 1999.asJson,
+      "actors" -> Json.arr("Keanu Reeves".asJson, "Carrie-Anne Moss".asJson, "Laurence Fishburne".asJson),
+      "isRatedR" -> true.asJson
+    )
 
     /* Parsing */
     val twinPeaksRawJson: String              =
@@ -98,7 +112,15 @@ object CirceExercises {
         |  }
         |}
         |""".stripMargin
-    lazy val killersOnTourJson: Json = ???
+    lazy val killersOnTourJson: Json =
+      parse(killersRawJson)
+        .getOrElse(Json.Null)
+        .hcursor
+        .downField("artist")
+        .downField("ontour")
+        .withFocus(_.mapBoolean(_ => true))
+        .top
+        .getOrElse(Json.Null)
   }
 
   /* Optics */
@@ -117,7 +139,8 @@ object CirceExercises {
     val oldGoodTwinPeaks: Json          = _oldGoodTwinPeaks(twinPeaksParsed)
 
     /* Exercise 3: same as 2, but using optics */
-    lazy val killersOnTourJson: Json = ???
+    val sendOnTour = root.artist.ontour.boolean.modify(_ => true)
+    lazy val killersOnTourJson: Json = sendOnTour(parsedKillersJson)
   }
 
   /* Encoding/decoding, part I */
@@ -156,7 +179,9 @@ object CirceExercises {
 
       What will happen if you comment codecs for `Song`?
      */
-    lazy val albumJson: Json = ???
+    @JsonCodec final case class Album(title: String, year:Int, songs: Seq[Song])
+    val album: Album = Album("Evolution", 2023, Seq(song))
+    lazy val albumJson: Json = album.asJson
   }
 
   /* Encoding/decoding, part II */
@@ -170,6 +195,7 @@ object CirceExercises {
   }
 
   object manual {
+//    @JsonCodec final case class Title(value:String)
     final case class Song(title: String, length: Int)
     private val song = Song("Crystal", 249)
 
@@ -178,11 +204,39 @@ object CirceExercises {
     implicit val songEncoder: Encoder[Song] =
       Encoder.forProduct2("title", "length")(s => (s.title, s.length))
 
+//    implicit val songDecoder1: Decoder[Song] =
+//      Decoder.instance{ cursor =>
+//        for{
+//          title <- cursor.get[Title]("title").orElse(cursor.get[String]("title").map(Title))
+//          length <- cursor.get[Int]("length")
+//        } yield Song(title,length)
+//      }
+
+//    implicit val songDecoder1: Decoder[Song] =
+//      Decoder.instance{ cursor =>
+//        for{
+//          title <- cursor.downField("title").as[String]
+//          length <- cursor.downField("length").as[Int]
+//        } yield Song(title,length)
+//      }
+//
+//    implicit val songEncoder1: Encoder[Song] = Encoder.instance { song =>
+//      Json.obj(
+//        "title" -> song.title.asJson,
+//        "length" -> song.length.asJson
+//      )
+//    }
+
     val songJson: Json                   = song.asJson
     val decodedSong: Either[Error, Song] = decode[Song](songJson.noSpaces)
 
     /* Exercise 5: same as 4, but with manual codecs */
-    lazy val albumJson: Json = ???
+    final case class Album(title:String, year: Int, songs: Seq[Song])
+    private val album: Album= Album("Cristal", 1999, Seq(song))
+
+    implicit val albumEncoder: Encoder[Album] =
+      Encoder.forProduct3("title", "year", "songs")(a => (a.title, a.year, a.songs))
+    lazy val albumJson: Json = album.asJson
   }
 
   /* Encoding/decoding, part III */
@@ -201,8 +255,10 @@ object CirceExercises {
     val timeWindowJson: Json   = timeWindow.asJson
 
     /* Exercise 6: write custom codec for java.time.Year using existing one for Int */
-    implicit lazy val encodeYear: Encoder[Year] = ???
-    implicit lazy val decodeYear: Decoder[Year] = ???
+    implicit lazy val encodeYear: Encoder[Year] = Encoder.encodeInt.contramap[Year](_.getValue)
+    implicit lazy val decodeYear: Decoder[Year] = Decoder.decodeInt.emap {
+      int => Either.catchNonFatal(Year.of(int)).leftMap(err => "Instant: " + err.getMessage)
+    }
   }
 
   object snake_case {
@@ -237,6 +293,8 @@ object CirceExercises {
     implicit val videoDecoder: Decoder[Video] =
       List[Decoder[Video]](movieDecoder.widen, ytDecoder.widen)
         .reduceLeft(_ or _)
+
+
     implicit val videoEncoder: Encoder[Video] = Encoder.instance {
       case m: Movie    => m.asJson
       case yt: Youtube => yt.asJson
@@ -266,7 +324,7 @@ object CirceExercises {
       gigs = Seq.empty,
     )
     val artists                      = Seq(theKillers, ye)
-    lazy val artistsJson: Json       = ???
+    lazy val artistsJson: Json       = artists.asJson
   }
 
 }

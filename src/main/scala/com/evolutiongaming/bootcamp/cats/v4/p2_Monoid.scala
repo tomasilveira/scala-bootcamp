@@ -14,22 +14,23 @@ object p2_Monoid {
     * Q: Can division be picked as an associative binary operation?
     */
   val intMultiplicationMonoid: Monoid[Int] = new Monoid[Int] {
-    override def empty: Int = ???
+    override def empty: Int = 0
 
-    override def combine(x: Int, y: Int): Int = ???
+    override def combine(x: Int, y: Int): Int = x * y
   }
 
   /** Ex 2.1 use string concatenation as an operation
     */
   val stringMonoid: Monoid[String] = new Monoid[String] {
-    override def empty: String = ???
+    override def empty: String = ""
 
-    override def combine(x: String, y: String): String = ???
+    override def combine(x: String, y: String): String = x + y
   }
 
   /** Ex 2.2 How about a monoid for boolean?
     * Pick AND as a binary operation.
-    *
+    * (false nor false) nor true == false
+    * false nor (false nor true) == true
     * Q: How many monoids exists for boolean?
     */
 
@@ -43,6 +44,13 @@ object p2_Monoid {
   implicitly[Monoid[String]]
   implicitly[Monoid[Seq[Any]]]
   implicitly[Monoid[Map[Any, String]]]
+
+  import cats.syntax.monoid._
+  Map(1 -> 1) |+| Map(1 -> 2)
+  Map(1 -> 3)
+
+  Map(1 -> List(1, 2)) |+| Map(1 -> List(3))
+  Map(1 -> List(1, 2, 3))
 
   // Lets try to create Monoid for Nel
   import cats.data.NonEmptyList

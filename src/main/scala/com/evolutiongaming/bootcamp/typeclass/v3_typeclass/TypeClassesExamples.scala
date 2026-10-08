@@ -77,7 +77,15 @@ object TypeClassesExamples extends App {
     def map[A, B](fa: Option[A])(f: A => B): Option[B] = fa.map(f)
   }
 
+  implicit def functFunc[T] = new Functor[T => *] {
+    override def map[A, B](fa: T => A)(f: A => B): T => B = t => f(fa(t))
+  }
+
+  val a: String => Int =((f: String) => f.toInt).map(_ + 1)
   // 3.1. Implement Functor for Map values
+  implicit def functMap[T] = new Functor[Map[T, *]] {
+    override def map[A, B](fa: Map[T, A])(f: A => B): Map[T, B] = fa.view.mapValues(f).toMap
+  }
 
   // 4. Semigroupal
   // 4.1. Semigroupal provides `product` method,
@@ -87,13 +95,28 @@ object TypeClassesExamples extends App {
   }
 
   // 4.2. Implement Summoner for Semigroupal
+  object Semigroupal {
+    def apply[F[_]: Semigroupal]: Semigroupal[F] = implicitly
+  }
+
 
   // 4.3. Implement Syntax for Semigroupal, so later you'll be able to do:
   // (Option(1) product Option(2)) == Some((1, 2))
+  implicit class SemigroupalOps[F[_]: Semigroupal, A](fa: F[A]) {
+    def product[B](fb: F[B]): F[(A, B)]= Semigroupal[F].product(fa,fb)
+  }
+
 
   // 4.4. Implement Semigroupal for Option
+  implicit val semOpt = new Semigroupal[Option] {
+    override def product[A, B](fa: Option[A], fb: Option[B]): Option[(A, B)] = ???
+  }
 
   // 4.5. Implement `mapN[R](f: (A, B) => R): F[R]` extension method for Tuple2[F[A], F[B]]
+  implicit class Tuple2Ops[F[_]: Semigroupal: Functor, A, B](tuple: (F[A], F[B])){
+    def mapN[R] (f:(A,B) => R): F[R] =
+      (tuple._1 product tuple._2).map(f.tupled)
+  }
 
   // (Option(1), Option(2)).mapN(_ + _) == Some(3)
   // (Option(1), None).mapN(_ + _)      == None
@@ -107,18 +130,35 @@ object TypeClassesExamples extends App {
     def pure[A](x: A): F[A]
   }
 
+  //pure(1) == Some(1)
+  //pure(1) == List(1)
+
   object Applicative {
     def apply[F[_]: Applicative]: Applicative[F] = implicitly
   }
 
-  implicit class ApplicativeValueOps[F[_]: Applicative, A](a: A) {
-    def pure: F[A] = Applicative[F].pure(a)
+  implicit class ApplicativeValueOps[A](a: A) {
+    def pure[F[_]: Applicative]: F[A] = Applicative[F].pure(a)
   }
 
   // 5.1. Implement Applicative for Option, Either
+  implicit val optAppl = new Applicative[Option] {
+
+    override def pure[A](x: A): Option[A] = Some(x)
+
+    override def map[A, B](fa: Option[A])(f: A => B): Option[B] = Functor[Option].map(fa)(f)
+
+    override def product[A, B](fa: Option[A], fb: Option[B]): Option[(A, B)] = Semigroupal[Option].product(fa, fb)
+  }
 
   // 5.2. Implement `traverse` function
-  def traverse[A, B](as: List[A])(f: A => Option[B]): Option[List[B]] = ???
+  def traverse[A, B](as: List[A])(f: A => Option[B]): Option[List[B]] = as.foldRight(Option(List.empty[B])) { (el,acc) =>
+    (acc,f(el))match {
+      case(Some(acc), Some(el)) => Some(el :: acc)
+      case _ => None
+    }}
+
+  //List[Int], Int => Future[String]  ===> Future[List[String]]
 
   // traverse(List(1, 2, 3)) { i =>
   //   Option.when(i % 2 == 1)(i)
@@ -129,14 +169,37 @@ object TypeClassesExamples extends App {
   // } == Some(List(2, 3, 4))
 
   // 5.3. Implement `traverseA` for all Applicatives instead of Option
+//  def traverseA[F[_]: Applicative, A, B](as: List[A])(f: A => F[B]): F[List[B]] =
+//    as.foldRight(List.empty[B].pure[F]) { (el,acc) =>
+//      (acc, f(el)).mapN{case (acc,el) =>
+//        el :: acc
+//      }
+//    }
 
-  // traverseA(List(1, 2, 3)) { i =>
-  //   Either.cond(i % 2 == 1, i, "Error")
-  // } == Left("Error")
+  def traverseA[F[_]: Applicative, A, B](as: List[A])(f: A => F[B]): F[List[B]] =
+    as.foldRight(List.empty[B].pure[F]) { (el,acc) =>
+      (f(el), acc).mapN(_::_)
+    }
 
-  // traverseA(List(1, 2, 3)) { i =>
-  //   Right(i + 1): Either[Int, Any]
-  // } == Right(List(2, 3, 4))
+  implicit def eitherApp[L]: Applicative[Either[L, *]] = new Applicative[Either[L, *]] {
+    override def pure[A](x: A): Either[L, A] = Right(x)
+
+    override def map[A, B](fa: Either[L, A])(f: A => B): Either[L, B] = fa.map(f)
+
+    override def product[A, B](fa: Either[L, A], fb: Either[L, B]): Either[L, (A, B)] = (fa,fb)match{
+      case (Right(a), Right(b)) => Right((a,b))
+      case (Left(a), _) => Left(a)
+      case (_, Left(b)) => Left(b)
+    }
+  }
+
+   traverseA(List(1, 2, 3)) { i =>
+     Either.cond(i % 2 == 1, i, "Error")
+   } == Left("Error")
+
+   traverseA(List(1, 2, 3)) { i =>
+     Right(i + 1): Either[Int, Any]
+   } == Right(List(2, 3, 4))
 
   // Scala Typeclassopedia: https://github.com/lemastero/scala_typeclassopedia
 }

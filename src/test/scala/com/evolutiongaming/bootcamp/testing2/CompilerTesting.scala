@@ -3,12 +3,17 @@ package com.evolutiongaming.bootcamp.testing2
 import cats.Monad
 import cats.syntax.all._
 import cats.tagless.finalAlg
+import com.evolutiongaming.bootcamp.testing2.EffectTracking.{Printing, Service}
 import eu.timepit.refined._
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric._
 import eu.timepit.refined.string._
+import org.log4s.Logger
 import org.scalatest.funsuite.AnyFunSuite
+
+import scala.collection.immutable
+import scala.concurrent.ExecutionContext
 import scala.util.Try
 import scala.util.Failure
 import scala.util.Success
@@ -40,9 +45,14 @@ object PowerfulScala {
   //
   // sbt:scala-bootcamp> testOnly *testing2.PowerfulScalaSpec
   //
+//  def energy(mass: BigDecimal): String = {
+//    val speedOfLight = BigDecimal(299792458)
+//    val energy       = mass * speedOfLight.pow(2)
+//    energy.toString
+//  }
   def energy(mass: String): String = {
     val speedOfLight = BigDecimal(299792458)
-    val energy       = BigDecimal(mass) * speedOfLight.pow(2)
+    val energy       = BigDecimal(mass) * speedOfLight.pow(2) //mass could be something that is not a number
     energy.toString
   }
 }
@@ -101,7 +111,7 @@ object RefinedScala {
 
   // It is possible to pass values of more specific types as more general type
   val largerThanSix: Int Refined Greater[6] = 7
-  val posInt: Int Refined Positive          = largerThanSix
+  val posInt: Refined[Int, Greater[6]]          = largerThanSix
 
   // Exercise 2
   //
@@ -223,11 +233,9 @@ object ValueClasses {
   // example 4
 
   // Let's focus on what parameters we can pass to the `transferMoney` function
-  def transferMoney(from: Account, to: Account, amount: BigDecimal): Unit = {
-    // some logic
-    // val deducted = from subtract...
-    // val added = to add ...
-  }
+  def transferMoney(from: Account, to: Account, amount: BigDecimal): Unit = ???
+
+
 
   // sending money is really important, so we want to make sure we don't make any mistakes
   // what if we, by accident, pass the wrong parameters to the `transferMoney` function?
@@ -239,6 +247,15 @@ object ValueClasses {
   // what is wrong with following code?
   // how can we make sure that we don't make such mistakes?
   transferMoney(to, from, 100)
+
+  case class SourceAccount(acc: Account) extends AnyVal
+  case class TargetAccount(acc: Account) extends AnyVal
+
+  def transferMoney2(from: SourceAccount, to: TargetAccount, amount: BigDecimal): Unit = ???
+  val sender: SourceAccount = ???
+  val receiver: TargetAccount   = ???
+
+//  transferMoney2(receiver, sender, 100) expects TargetAccount not SourceAccount
 
 }
 
@@ -257,7 +274,19 @@ object ImpossibleState {
 
   // Exercise 3
   // Use Algebraic Data Types to model Task domain.
-  sealed trait Task
+  sealed trait Task{ def id: String }
+  case class FinishedTask(id:String, finishedAt: Long) extends Task
+  case class RunningTask(id:String, progress: Double) extends Task
+  case class CancelledTask(id:String) extends Task
+
+//  final case class Task1( id: String, status: Status )
+//  sealed trait Status
+//  case class Finished(finishedAt: Long) extends Task
+//  case object Running extends Task
+//  case object Cancelled extends Task
+
+
+  def processFinishedTask(task: Vector[FinishedTask]): Unit = ???
 
   // Does one needs to write tests for such code?
   // What kind of tests are not needed anymore after using ADTs?
@@ -282,19 +311,19 @@ object Parametricity {
   // https://medium.com/bigpanda-engineering/understanding-parametricity-in-scala-520f9f10679a
 
   // Implement the following function in all possible ways:
-  def f1_way1[A](a: A): A = ???
+  def f1_way1[A](a: A): A = a
   def f1_way2[A](a: A): A = ???
 
   // Let's do another one...
-  def f2_way1[A](a: A, b: A): A = ???
-  def f2_way2[A](a: A, b: A): A = ???
+  def f2_way1[A](a: A, b: A): A = a
+  def f2_way2[A](a: A, b: A): A = b
   def f2_way3[A](a: A, b: A): A = ???
 
   // Can this function use `a` somehow in implementation?
-  def f3[A](a: A, b: Int): Int = ???
+  def f3[A](a: A, b: Int): Int = b
 
   // How about this one?
-  def f4[A](a: A, b: String): String = ???
+  def f4[A](a: A, b: String): String = a.toString + b
 
   // Implement the following function in several ways:
   // What is common in all of these implementations?
@@ -303,10 +332,10 @@ object Parametricity {
   def f5_way3[A](as: List[A]): List[A] = ???
 
   // How many ways we can implement this function with?
-  def f6[A, B](as: List[A]): List[B] = ???
+  def f6[A, B](as: List[A]): List[B] = Nil
 
   // How about this one?
-  def f7[A](a: A): Int = ???
+  def f7[A](a: A): Int = ??? //HashCode
 
   // Exercise 5
   //
@@ -439,14 +468,14 @@ object EffectTracking {
 
   // Take a look at this service
   // how to test that it works correctly? If it fetches time and prints message?
-  class CoupledService() {
+  class CoupledService(printWithClock: PrintWithClock) {
     def call(arg: String): Unit = {
       // ... many lines of code
-      val currentTime = System.currentTimeMillis()
+      val currentTime = printWithClock.currentTimeMillis()
       val msg         = s"$currentTime $arg"
       // ... many lines of code
 
-      print(msg)
+      printWithClock.print(msg)
     }
   }
 
@@ -458,6 +487,20 @@ object EffectTracking {
     def print(text: String): Unit
     def currentTimeMillis(): Long
   }
+
+//  object PrintWithClock {
+//    val default: PrintWithClock {} = new PrintWithClock {
+//      override def print(text: String): Unit = print(text)
+//
+//      override def currentTimeMillis(): Long = System.currentTimeMillis()
+//    }
+//
+//    def constantTime(time: Long): PrintWithClock = new PrintWithClock {
+//      override def print(text: String): Unit = print(text)
+//
+//      override def currentTimeMillis(): Long = time
+//    }
+//  }
 
   trait Printing {
     def print(text: String): Unit
@@ -480,6 +523,12 @@ object EffectTracking {
     }
   }
 
+  object Main {
+    def main(args: Array[String]): Unit = {
+      val service: Service= new Service(System.out.print, () => System.currentTimeMillis())
+      service.call("hello")
+    }
+  }
   object Service {
     val default = new Service(
       text => print(Service),
@@ -496,8 +545,24 @@ object EffectTrackingSpec extends AnyFunSuite {
   //
   // sbt:scala-bootcamp> testOnly *testing2.ParametricitySpec
   //
+
+  class TestPrinting extends Printing {
+    var printed: List[String] = Nil
+
+    override def print(text:String): Unit ={
+      printed = text :: printed
+    }
+  }
+
   test("Service.call prints out anything") {
-    ???
+    val printing = new TestPrinting()
+    val service = new Service(printing, () => 0L)
+    service.call("hello")
+    printing.printed match {
+      case head :: _ =>
+        assert(head == "0 hello")
+      case immutable.Nil => fail("Nothing was printed")
+    }
   }
 
   test("Service.call prints out correct message with current time") {
