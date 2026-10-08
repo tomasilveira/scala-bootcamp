@@ -4,13 +4,16 @@ import cats.Monad
 import cats.data.State
 import cats.syntax.all._
 import com.evolutiongaming.bootcamp.testing2.hal9000.HAL9000
+
 import java.util.concurrent.atomic.AtomicReference
 import org.scalatest.EitherValues
+import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.funsuite.AsyncFunSuite
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+
 import scala.annotation.nowarn
 import scala.concurrent.Future
 import scala.concurrent.Promise
@@ -211,7 +214,30 @@ class Exercise2Spec extends AnyFreeSpec {
 //
 // sbt:scala-bootcamp> testOnly *testing2.Exercise3Spec
 //
-class Exercise3Spec extends AnyWordSpec {}
+class Exercise3Spec extends AnyWordSpec {
+  convertToStringShouldWrapperForVerb("Calculator") should {
+    convertToWordSpecStringWrapper("enter the number correctly") in {
+      val calculator: Calculator = Calculator()
+      assert(calculator.enter(1) == Right[Nothing, Calculator](Calculator(1, 0, None)))
+      assert(calculator.enter(7) == Right[Nothing, Calculator](Calculator(7, 0, None)))
+      assert(calculator.enter(12) == Left[String, Nothing]("digit out of range"))
+    }
+  }
+}
+
+class Exercise3SpecV2 extends AnyFlatSpec {
+  "A calculator" should "enter the number correctly" in {
+    val calculator = Calculator()
+    assert(calculator.enter(1) == Right(Calculator(1, 0, None)))
+    assert(calculator.enter(7) == Right(Calculator(7, 0, None)))
+    assert(calculator.enter(12) == Left("digit out of range"))
+  }
+
+  it should "fail if incorrect number is pressed" in {
+    val calculator = Calculator()
+    assert(calculator.enter(12) == Left("digit out of range"))
+  }
+}
 
 // *Note*
 //
@@ -280,7 +306,7 @@ class Exercise5Spec extends AnyFreeSpec with EitherValues {
   "calculator" - {
     "enters the number correctly" in {
       val calculator = Calculator()
-      assert(calculator.enter(1).right.value == Calculator(1, 0, None))
+      assert(calculator.enter(1).value == Calculator(1, 0, None))
       assert(calculator.enter(7) == Right(Calculator(7, 0, None)))
       assert(calculator.enter(12) == Left("digit out of range"))
     }
@@ -344,6 +370,17 @@ class Exercise6Spec extends AnyFunSuite {
 
 }
 
+class Exercise6SpecMunit extends munit.FunSuite {
+
+  test(testOptionsFromString("Calculator of the test 1").only) {
+    // here goes your test 1
+  }
+  test(testOptionsFromString("Calculator of the test 2").only) {
+    // here goes your test 2
+  }
+
+}
+
 // *Exercise 7*
 //
 // As you may have noticed, there is a convention to put the tests for the
@@ -356,52 +393,55 @@ class Exercise6Spec extends AnyFunSuite {
 //
 // sbt:scala-bootcamp> testOnly *testing2.Exercise7Spec
 //
-class Exercise7Spec extends AnyFunSuite {
 
-  test("HAL 9000 multiplies numbers correctly") {
-    // assert(HAL9000.twice(7) == 14)
+package hal9000 {
+  class Exercise7Spec extends AnyFunSuite {
+
+    test("HAL 9000 multiplies numbers correctly") {
+      assert(HAL9000.twice(7) == 14)
+    }
+
   }
 
-}
+  // *Exercise 8*
+  //
+  // Did you notice another method in HAL 9000? It fails! Can we test it?
+  //
+  // Write a test using one of the methods found here:
+  // https://www.scalatest.org/user_guide/using_assertions#expectedExceptions
+  //
+  // There is also a special matcher for that, if you want to use them:
+  // https://www.scalatest.org/user_guide/using_matchers#expectedExceptions
+  //
+  // sbt:scala-bootcamp> testOnly *testing2.Exercise8Spec
+  //
+  class Exercise8Spec extends AnyFunSuite {
 
-// *Exercise 8*
-//
-// Did you notice another method in HAL 9000? It fails! Can we test it?
-//
-// Write a test using one of the methods found here:
-// https://www.scalatest.org/user_guide/using_assertions#expectedExceptions
-//
-// There is also a special matcher for that, if you want to use them:
-// https://www.scalatest.org/user_guide/using_matchers#expectedExceptions
-//
-// sbt:scala-bootcamp> testOnly *testing2.Exercise8Spec
-//
-class Exercise8Spec extends AnyFunSuite {
+    test("HAL 9000 behaves as expected when asked to open the door") {}
 
-  test("HAL 9000 behaves as expected when asked to open the door") {}
-
-}
-
-// *Exercise 9*
-//
-// It is the best to make the code self-documenting and readable. If we cannot,
-// we are trying to make the tests readable. If we cannot achieve test to be
-// readable, we can add the clues into tests.
-//
-// HAL 9000 goes crazy about his mission if two registers do not match.
-// Unfortunately astronauts do not know about it. Save the astronauts
-// by adding a clue to the test below according to the following document:
-//
-// https://www.scalatest.org/user_guide/using_assertions#gettingAClue
-//
-// sbt:scala-bootcamp> testOnly *testing2.Exercise9Spec
-//
-class Exercise9Spec extends AnyFunSuite {
-
-  test("HAL9000") {
-    assert(HAL9000.register1 == HAL9000.register2)
   }
 
+  // *Exercise 9*
+  //
+  // It is the best to make the code self-documenting and readable. If we cannot,
+  // we are trying to make the tests readable. If we cannot achieve test to be
+  // readable, we can add the clues into tests.
+  //
+  // HAL 9000 goes crazy about his mission if two registers do not match.
+  // Unfortunately astronauts do not know about it. Save the astronauts
+  // by adding a clue to the test below according to the following document:
+  //
+  // https://www.scalatest.org/user_guide/using_assertions#gettingAClue
+  //
+  // sbt:scala-bootcamp> testOnly *testing2.Exercise9Spec
+  //
+  class Exercise9Spec extends AnyFunSuite {
+
+    test("HAL9000") {
+      assert(HAL9000.register1 == HAL9000.register2)
+    }
+
+  }
 }
 
 // *Exercise 10*

@@ -279,52 +279,82 @@ object CirceExercises {
     implicit val config: Configuration = Configuration.default
       .copy(transformConstructorNames = _.toLowerCase)
 
-    implicit val genreCodec: Codec[Genre] = deriveEnumerationCodec[Genre]
-    val `hip-hop`: Genre                  = Genre.`Hip-Hop`
-    val hhJson: Json                      = `hip-hop`.asJson
+    // Genre: Rock, Hip-Hop, Pop, Jazz
+    implicit val genreCodec: Codec[Genre] =
+      deriveEnumerationCodec[Genre]
 
-    sealed trait Video
-    final case class Movie(rating: Double) extends Video
-    final case class Youtube(views: Long)  extends Video
-    implicit val movieDecoder: Decoder[Movie] = deriveConfiguredDecoder[Movie]
-    implicit val movieEncoder: Encoder[Movie] = deriveConfiguredEncoder[Movie]
-    implicit val ytDecoder: Decoder[Youtube]  = deriveConfiguredDecoder[Youtube]
-    implicit val ytEncoder: Encoder[Youtube]  = deriveConfiguredEncoder[Youtube]
-    implicit val videoDecoder: Decoder[Video] =
-      List[Decoder[Video]](movieDecoder.widen, ytDecoder.widen)
-        .reduceLeft(_ or _)
+    // MusicianKind: Singer, Guitar, Bass, Drums, Keys
+    implicit val musicianKindCodec: Codec[MusicianKind] =
+      deriveEnumerationCodec[MusicianKind]
 
+    // Regular case classes
+    implicit val musicianCodec: Codec[Musician] =
+      deriveConfiguredCodec[Musician]
 
-    implicit val videoEncoder: Encoder[Video] = Encoder.instance {
-      case m: Movie    => m.asJson
-      case yt: Youtube => yt.asJson
-    }
+    implicit val gigCodec: Codec[Gig] =
+      deriveConfiguredCodec[Gig]
 
-    /* Exercise 7: write codecs for classes in Models, create some artists and encode them */
-    val someSinger: Musician         = Musician("Brandon Flowers", MusicianKind.Singer)
-    val someGuitar: Musician         = Musician("Dave Keuning", MusicianKind.Guitar)
-    val someBass: Musician           = Musician("Mark Stoermer", MusicianKind.Bass)
-    val brandonFlowers: SoloMusician = SoloMusician(someSinger, Genre.Pop, gigs = Seq.empty)
-    val daveKeuning: SoloMusician    = SoloMusician(someGuitar, Genre.Rock, gigs = Seq.empty)
-    val markStoermer: SoloMusician   = SoloMusician(someBass, Genre.Rock, gigs = Seq.empty)
-    val theKillers: Artist           = Band(
-      title = "The Killers",
-      members = Seq(
-        brandonFlowers.musician,
-        daveKeuning.musician,
-        markStoermer.musician,
-        Musician("Ronnie Vanucci Jr.", MusicianKind.Drums),
-      ),
-      genre = Genre.Rock,
-      gigs = Seq(gig),
-    )
-    val ye: Artist                   = SoloMusician(
-      musician = Musician("Kanye West", MusicianKind.Singer),
-      genre = Genre.`Hip-Hop`,
-      gigs = Seq.empty,
-    )
-    val artists                      = Seq(theKillers, ye)
-    lazy val artistsJson: Json       = artists.asJson
+    // Artist implementations
+    implicit val bandEncoder: Encoder[Band] =
+      deriveConfiguredEncoder[Band]
+
+    implicit val soloMusicianEncoder: Encoder[SoloMusician] =
+      deriveConfiguredEncoder[SoloMusician]
+
+    // Encoder for the sealed trait
+    implicit val artistEncoder: Encoder[Artist] =
+      Encoder.instance {
+        case band: Band =>
+          band.asJson
+        case solo: SoloMusician =>
+          solo.asJson
+      }
+
+    /* Exercise 7 */
+
+    val someSinger: Musician =
+      Musician("Brandon Flowers", MusicianKind.Singer)
+
+    val someGuitar: Musician =
+      Musician("Dave Keuning", MusicianKind.Guitar)
+
+    val someBass: Musician =
+      Musician("Mark Stoermer", MusicianKind.Bass)
+
+    val brandonFlowers: SoloMusician =
+      SoloMusician(someSinger, Genre.Pop, gigs = Seq.empty)
+
+    val daveKeuning: SoloMusician =
+      SoloMusician(someGuitar, Genre.Rock, gigs = Seq.empty)
+
+    val markStoermer: SoloMusician =
+      SoloMusician(someBass, Genre.Rock, gigs = Seq.empty)
+
+    val theKillers: Artist =
+      Band(
+        title = "The Killers",
+        members = Seq(
+          brandonFlowers.musician,
+          daveKeuning.musician,
+          markStoermer.musician,
+          Musician("Ronnie Vanucci Jr.", MusicianKind.Drums)
+        ),
+        genre = Genre.Rock,
+        gigs = Seq(gig)
+      )
+
+    val ye: Artist =
+      SoloMusician(
+        musician = Musician("Kanye West", MusicianKind.Singer),
+        genre = Genre.`Hip-Hop`,
+        gigs = Seq.empty
+      )
+
+    val artists: Seq[Artist] =
+      Seq(theKillers, ye)
+
+    lazy val artistsJson: Json =
+      artists.asJson
   }
 
 }

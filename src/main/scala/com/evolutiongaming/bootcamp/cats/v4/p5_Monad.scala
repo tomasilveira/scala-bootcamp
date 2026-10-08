@@ -30,7 +30,7 @@ object p5_Monad {
 
     /** Ex 5.0 implement map in terms of pure and flatMap.
       */
-    def map[A, B](fa: F[A])(f: A => B): F[B] = ??? /* your code here */
+    def map[A, B](fa: F[A])(f: A => B): F[B] = flatMap(fa)((a: A) => pure(f(a)))
 
     // cats only special method for stack-safety
     // def tailRecM[A, B](a: A)(f: A => F[Either[A, B]]): F[B] = ???

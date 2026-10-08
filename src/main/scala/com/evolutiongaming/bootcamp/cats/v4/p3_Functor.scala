@@ -10,15 +10,19 @@ object p3_Functor {
   /** Ex 3.0 implement functor for Option, (don not use fa.map(f))
     */
   val optFunctor: Functor[Option] = new Functor[Option] {
-    override def map[A, B](fa: Option[A])(f: A => B): Option[B] =
-      ??? /* your code here */
+    override def map[A, B](fa: Option[A])(f: A => B): Option[B] = fa match{
+      case Some(value) => Some(f(value))
+      case None => None
+    }
   }
 
   /** Ex 3.1 how about Functor for List (do not use fa.map(f))
     */
   val listFunctor: Functor[List] = new Functor[List] {
-    override def map[A, B](fa: List[A])(f: A => B): List[B] =
-      ??? /* your code here */
+    override def map[A, B](fa: List[A])(f: A => B): List[B] = fa match{
+      case head :: next => f(head) :: map(next)(f)
+      case Nil => Nil
+    }
   }
 
   def identity[A](a: A): A = a
